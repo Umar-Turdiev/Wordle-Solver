@@ -20,6 +20,13 @@ class ConsoleColor:
 class PatternConverter:
     @staticmethod
     def convert(pattern: str, replacement: dict) -> str:
+        """
+        Convert each characters in "pattern" into corresponding replacements.
+
+        :param pattern: Pattern to convert.
+        :param replacement: Dictionary containing each characters in "pattern" as keys, replacement character as values.
+        :return: New pattern with replaced character applied.
+        """
         new_pattern = ''
 
         for i in range(len(pattern)):
@@ -30,7 +37,15 @@ class PatternConverter:
 
 class GameLogic:
     @staticmethod
-    def check_answer(word_to_check: str, word_to_compare: str):
+    def check_answer(word_to_check: str, word_to_compare: str) -> str:
+        """
+        Wordle game logic.
+
+        :param word_to_check: Word to check.
+        :param word_to_compare: Word to compare.
+        :return: Result pattern, in Wordle game speaking, 'green' = '2', 'yellow' = '2','gray' = '0'.
+        """
+
         length = len(word_to_check)
         used_chars = {i: {'character': '', 'result': ''} for i in range(length)}
         allowed_char_usage = {}
@@ -83,7 +98,7 @@ class Entropy:
         Calculate the entropy of the given data.
 
         :param data: Dictionary with each result possibility as key and probability of occurrence as value.
-        :param base: Logarithmic base to use, defaults value is e (natural logarithm).
+        :param base: Logarithmic base to use, defaults value is "e" (natural logarithm).
         :return: Calculated entropy.
         """
 
@@ -116,6 +131,15 @@ class Converter:
 
 class Solver:
     def __init__(self, raw_allowed_guesses_path, raw_allowed_answers_path, allowed_guesses_path, allowed_answers_path):
+        """
+        Initialize Wordle solver.
+
+        :param raw_allowed_guesses_path: Path to file storing raw allowed guesses.
+        :param raw_allowed_answers_path: Path to file storing raw allowed answers.
+        :param allowed_guesses_path: Path to file storing allowed guesses.
+        :param allowed_answers_path: Path to file storing allowed answers.
+        """
+
         self._raw_allowed_guesses_path = raw_allowed_guesses_path
         self._raw_allowed_answers_path = raw_allowed_answers_path
         self._allowed_guesses_path = allowed_guesses_path
@@ -150,7 +174,13 @@ class Solver:
             with open(self._allowed_answers_path, 'w') as writer:
                 Converter.text_to_json(input_file=reader, output_file=writer)
 
-    def _load_allowed_guesses(self, fail_limit):
+    def _load_allowed_guesses(self, fail_limit) -> None:
+        """
+        Load allowed guesses json file into "self._possible_guesses".
+
+        :param fail_limit: How many times to try before exiting the app.
+        """
+
         if fail_limit > 0:
             fail_limit -= 1
 
@@ -162,38 +192,28 @@ class Solver:
                     self.setup()
                     self._load_allowed_guesses(fail_limit)
         else:
-            print('Failed to load "allowed answers" for too many times.')
-            return
+            print('Failed to load "allowed answers" for too many times. Exiting...')
+            exit()
 
     @staticmethod
     def _calculate_entropy(word_dict: dict) -> None:
         for word in word_dict.keys():
-            word_dict[word][0] = Solver._calculate_single_word_entropy(word, word_dict)
+            word_dict[word][0] = Solver._calculate_single_word_entropy(word, list(word_dict.keys()))
             # print(f"{word}: {word_dict[word]}")
 
     @staticmethod
-    def _calculate_single_word_entropy(word: str, data: dict) -> float:
+    def _calculate_single_word_entropy(word: str, words: list) -> float:
         """
         Calculate entropy for each word using word data passed into this function.
 
-        :param word:
-        :param data:
-        :return:
+        :param word: Word to calculate entropy.
+        :param words: List with words to compare.
+        :return: Entropy of the selected word.
         """
 
-        """
-        Store result pattern as key and each pattern's probability. 
-        
-        i.e.
-        {
-            '<pattern>': <probability of pattern>,
-            '<pattern>': <probability of pattern>,
-            ...
-        }
-        """
         results = {}
 
-        for d in data.keys():
+        for d in words:
             result = GameLogic.check_answer(word, d)
 
             if result not in results:
@@ -202,7 +222,7 @@ class Solver:
                 results[result] += 1
 
         for key in results.keys():
-            results[key] /= len(data)
+            results[key] /= len(words)
 
         return round(Entropy.entropy_math(results, 2), 2)
 
@@ -211,7 +231,7 @@ class Solver:
         """
         Calculate word frequency for each word in data.
 
-        :param data:
+        :param data: Dictionary with words to check as keys, list with size of 2 as values.
         """
 
         for word in data.keys():
@@ -303,7 +323,7 @@ class Solver:
 class WordleGame:
     def __init__(self, answer_list: list, allowed_words_list: list, game_logic, round_limit: int = 6,
                  input_injector=None, output_receiver=None, designated_answer: str = None,
-                 is_output_enabled: bool = True):
+                 output_game_result_to_receiver_enabled: bool = True, result_pattern_pretty_print: bool = True):
         """
         Wordle game initializer.
 
@@ -314,7 +334,8 @@ class WordleGame:
         :param input_injector: (optional) Custom function to pass in a new input. Signature: func() -> str.
         :param output_receiver: (optional) Custom function to receive each round's result. Signature: func(str).
         :param designated_answer: (optional) Designated answer instead of a randomly generated one.
-        :param is_output_enabled: (optional) Flag to enable outputting results to console.
+        :param output_game_result_to_receiver_enabled: (optional) Flag to enable outputting results to console.
+        :param result_pattern_pretty_print: (optional) Whether to return result in number pattern format or not.
         """
 
         self._answer_list = answer_list
@@ -324,9 +345,15 @@ class WordleGame:
         self._input = input if (input_injector is None) else input_injector
         self._output = print if (output_receiver is None) else output_receiver
         self._answer = self._pick_answer() if (designated_answer is None) else designated_answer
-        self._is_output_enabled = is_output_enabled
+        self._is_output_game_result_to_receiver_enabled = output_game_result_to_receiver_enabled
+        self._result_pattern_pretty_print = result_pattern_pretty_print
         self._word_length = len(self._answer)
         self._guessed_answers = []
+        self._pattern_replacement = {
+            '2': '🟩',
+            '1': '🟨',
+            '0': '⬛️',
+        }
 
     def _pick_answer(self) -> str:
         """
@@ -378,10 +405,20 @@ class WordleGame:
             self._guessed_answers.append(guess)
 
             result = self._game_logic(guess, self._answer)
-            self._output(result)
+
+            if self._result_pattern_pretty_print:
+                self._output(PatternConverter.convert(result, self._pattern_replacement))
+            else:
+                self._output(result)
 
             if result == '2' * self._word_length:
+                if self._is_output_game_result_to_receiver_enabled:
+                    self._output(f'You won. Congrats 🥳')
+
                 return i
+
+        if self._is_output_game_result_to_receiver_enabled:
+            self._output(f'You lost. The answer was: {self._answer}')
 
         return -1
 
@@ -405,14 +442,14 @@ class Simulator:
     def __init__(self, allowed_answers: list, solver: Solver, wordle_game: WordleGame):
         self._allowed_answers = allowed_answers
         self._solver = solver
-        self._wordle_gamer = wordle_game
+        self._wordle_game = wordle_game
         # self._game_record = {i: [0, []] for i in range(-1, 7) if i}
         self._game_record = {i: 0 for i in range(-1, 7) if i}
 
     def simulate(self):
         while len(self._allowed_answers) > 0:
             answer = self._allowed_answers.pop()
-            result = wordle_game.restart(answer)
+            result = self._wordle_game.restart(answer)
             self._game_record[result] += 1
             # self._game_record[result][0] += 1
             # self._game_record[result][1].append(answer)
@@ -450,7 +487,7 @@ class Simulator:
         plt.show()
 
 
-if __name__ == '__main__':
+def main():
     solver = Solver(raw_allowed_guesses_path='./data/_allowed_guesses.txt',
                     raw_allowed_answers_path='./data/_allowed_answers.txt',
                     allowed_guesses_path='./data/allowed_guesses.json',
@@ -473,7 +510,8 @@ if __name__ == '__main__':
                     wordle_game = WordleGame(list(allowed_answers.keys()), list(allowed_guesses.keys()),
                                              GameLogic.check_answer, input_injector=solver.get_next_word,
                                              output_receiver=solver.evaluate,
-                                             is_output_enabled=False)
+                                             output_game_result_to_receiver_enabled=False,
+                                             result_pattern_pretty_print=False)
 
                     simulator = Simulator(list(allowed_answers.keys()), solver, wordle_game)
                     simulator.simulate()
@@ -507,3 +545,7 @@ if __name__ == '__main__':
                                          GameLogic.check_answer)
 
                 wordle_game.play()
+
+
+if __name__ == '__main__':
+    main()
