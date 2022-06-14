@@ -12,7 +12,7 @@ This Wordle solver were written in Python, it uses entropy to provide you words 
 
 1. This code was written in Python 3.8, so anything equal or higher should work.
 
-1. Donwload the [latest version](https://github.com/Umar-Turdiev/Wordle-Solver/releases/tag/1.0.0):
+1. Donwload the [latest version](https://github.com/Umar-Turdiev/Wordle-Solver/releases/tag/1.0.0).
 
 1. Extract the compressed file.
 
