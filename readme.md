@@ -6,6 +6,8 @@ Well this is for you.
 
 This Wordle solver were written in Python, it uses entropy to provide you words that can quickly narrow down the answers.
 
+[Chinese version documentation-中文版說明](https://github.com/Umar-Turdiev/Wordle-Solver/blob/master/readme-TraditionalChinses.md).
+
 ## How to use it ?
 
 1. This code was written in Python 3.8, so anything equal or higher should work.
