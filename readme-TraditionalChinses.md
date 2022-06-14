@@ -10,11 +10,9 @@
 
 1. 這段程式是用Python 3.8編寫的，所以任何相同或更高版本都可以工作。
 
-1. 克隆此存儲庫：
+1. 下載[最新版本](https://github.com/Umar-Turdiev/Wordle-Solver/releases/tag/1.0.0)。
 
-    ```sh
-    git clone https://github.com/Umar-Turdiev/Wordle-Solver.git
-    ```
+1. 把檔案解壓縮。
 
 1. 安裝依賴的第三方程式庫：
 
